@@ -1,0 +1,4 @@
+# fracas
+
+    > make
+    > ./main
