@@ -3,7 +3,9 @@
 #include <errno.h>
 #include <assert.h>
 #include <math.h>
+#include <memory>
 
+//#define STB_DEFINE
 #include "stb.h"
 
 #include "vm.h"
@@ -15,6 +17,21 @@ struct FourCC
 };
 
 const unsigned int kMagicDC(FourCC<'D', 'C', '0', '0'>::value);
+
+void hex_dump (void * buffer, int data_size)
+{
+	int lines = data_size/8 + 1;
+
+	uint8 * ptr = (uint8*)buffer;
+	for (int ii = 0; ii < lines; ++ii)
+	{
+		printf("%016lx : %02x %02x %02x %02x %02x %02x %02x %02x\n",
+			   (uintptr_t)ptr,
+			   ptr[0], ptr[1], ptr[2], ptr[3],
+			   ptr[4], ptr[5], ptr[6], ptr[7]);
+		ptr += 8;
+	}
+}
 
 
 //
@@ -52,10 +69,14 @@ int main ()
 
 	assert(header.m_magic == kMagicDC);
 	assert(header.m_version == 1);
-	//assert(fabs(header.m_value - 12.34) < 0.001);
+	assert(header.m_size > sizeof(header_t));
 
-	int32 data_size = header.m_size - sizeof(header_t);
-	uint8 * buffer = (uint8*)malloc(data_size);
+	size_t align = 16;
+	size_t data_size = header.m_size - sizeof(header_t);
+	size_t alloc_size = data_size + align;
+
+	void * ptr = malloc(alloc_size);
+	uint8 * buffer = (uint8*)((size_t)ptr + (align - (size_t)ptr % align));
 	if (1 != fread(buffer, data_size, 1, fp))
 	{
 		printf("Error reading data (%d)\n", errno);
@@ -63,14 +84,16 @@ int main ()
 		return -1;
 	}
 
+	hex_dump(buffer, data_size);
+
+	// verify test entries
 	int32 * pI = (int32*)buffer;
 	assert(*pI == 24);
 
 	stb_uint64 * pU64 = (stb_uint64*)(buffer + 4);
-	printf("pU64 == %lld\n", *pU64);
 	assert(*pU64 == 0xffffffffffffffff);
 
-	free(buffer);
+	free(ptr);
 	fclose(fp);
 
 	return 0;

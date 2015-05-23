@@ -7,6 +7,7 @@
              racket/list)
  racket/bytes
  racket/file
+ racket/list
  ]
 
 (define (int32->bytes v) (integer->integer-bytes v 4 #t))
@@ -23,57 +24,20 @@
 
 (struct instance (type value))
 
-;; (begin-for-syntax
-;;   (define-syntax-class spec
-;;     #:attributes (encode decode size)
+;;
+;; payload needs to be an instance -- an array of values, or a defined struct
+;;
 
-;;     [pattern
-;;      ((~literal struct)
-;;       (name0:id type0:spec)
-;;       ...
-;;       (~optional (~seq #:align align-e:expr)))
+(define payload
+  (list (instance int32 24)
+        (instance word64 #xffffffffffffffff)))
 
-;;      #:with ((e.start e.end) ...)
-;;      (let ()
-
-;;        )
-
-;;      #:size (apply + (attribute type0.size))
-;;      #:attr encode
-;;      (with-syntax
-;;          ([((i e.bs e.tree) ...)
-;;            (for/list ([i (in-naturals)]
-;;                       [e (in-list (syntax->list #'(type0 ...)))])
-;;              (list i (generate-temporary) (generate-temporary)))])
-;;        #'(lambda (v off)
-;;            (let-values ([(e.bs e.tree)
-;;                          (type0.encode (vector-ref v i))])
-;;              )))
-
-;;      ]
-;;     ))
-
-
-;; (define hash-table
-;;   (struct
-;;     #:private-fields
-;;     (count : int32)
-;;     (values : (value array))
-
-;;     #:constructor
-;;     (lambda ((value list) -> hash-table)
-;;       (new hash-table
-;;            (count (length ))
-;;       )
-
-;;     #:method lookup
-;;     (lambda (symbol -> value)
-;;       (let ((index (symbol->hash# id)))
-;;         (aref (-> self values) index))
-;;       ))))
-
-
-
+(define (generate-header-bytes bs)
+  [bytes-append
+   #"DC00"
+   (int32->bytes 1)
+   (int32->bytes (+ 12 (foldl + 0 (map (compose type-size instance-type) bs))))
+   ])
 
 (define (main)
   ;;[display (equal? 12 (int32-decode (encode-closure int32-encode 12) 0))]
@@ -81,28 +45,15 @@
   (call-with-atomic-output-file
    (build-path "test.bin")
    (lambda (port tmp-path)
-
-     (let ((bs [bytes-append
-                #"DC00"
-                (int32->bytes 1)
-                (int32->bytes 20)
-                ]))
-
-       ;;(string->bytes/utf-8 (format "test string~n"))
-       (display bs port)
-
-       (display
-        (let ((lst (list (instance int32 24)
-                         (instance word64 #xffffffffffffffff))))
-          (bytes-append*
-           (map (lambda (inst)
-                  ((type-->bytes (instance-type inst)) (instance-value inst)))
-                lst)
-           ))
-        port
-        )
-       )
-     ))
+     (display (generate-header-bytes payload) port)
+     (let ((bb (bytes-append*
+                (map (lambda (inst)
+                       ((type-->bytes (instance-type inst)) (instance-value inst)))
+                     payload)
+                )))
+       ;;(printf "bb : ~v~n" bb)
+       (display bb port)
+       )))
 
   ;;(write (string->bytes/utf-8 (format "test string~n")))
 
