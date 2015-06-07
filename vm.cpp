@@ -84,6 +84,8 @@ int main ()
 		return -1;
 	}
 
+	printf("crc32 = 0x%08x\n", header.m_crc32);
+
 	hex_dump(buffer, data_size);
 
 	// verify test entries
