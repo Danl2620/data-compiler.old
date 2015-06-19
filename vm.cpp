@@ -48,9 +48,14 @@ void hex_dump (void * buffer, int data_size)
 // 		exit(-1); \
 // 	}
 
-int main ()
+int main (int argc, const char * argv[])
 {
-	FILE * fp = fopen("test.bin","rb");
+	if (argc < 2)
+		return -1;
+
+	const char * path = argv[1];
+	printf("reading '%s':\n", path);
+	FILE * fp = fopen(path,"rb");
 	if (!fp)
 	{
 		printf("Cannot open file (%d)\n", errno);
@@ -65,7 +70,11 @@ int main ()
 		return -1;
 	}
 
-	printf("header: \n  %d\n  %d\n  %d\n", header.m_magic, header.m_version, header.m_size);
+	printf("header: \n  0x%08x\n  %d\n  %d\n  0x%08x\n",
+		   header.m_magic,
+		   header.m_version,
+		   header.m_size,
+		   header.m_crc32);
 
 	assert(header.m_magic == kMagicDC);
 	assert(header.m_version == 1);
@@ -83,8 +92,6 @@ int main ()
 		fclose(fp);
 		return -1;
 	}
-
-	printf("crc32 = 0x%08x\n", header.m_crc32);
 
 	hex_dump(buffer, data_size);
 

@@ -98,6 +98,11 @@
   (list (instance int32 24)
         (instance word64 #xffffffffffffffff)))
 
+;; header:
+;;  magic u4
+;;  version i4
+;;  size i4
+;;  crc32 u4
 (define (generate-header-bytes bs bs-port)
   [bytes-append
    #"DC00"
@@ -106,23 +111,25 @@
    (word32->bytes (bytes-crc32 (get-output-bytes bs-port)))
    ])
 
-(define (main)
-  ;;[display (equal? 12 (int32-decode (encode-closure int32-encode 12) 0))]
-
+(define (write-bin payload path)
   (let ((payload-port (open-output-bytes)))
     (for-each (lambda (inst)
                 ((type-write (instance-type inst)) (instance-value inst) payload-port))
               payload)
 
     (call-with-atomic-output-file
-     (build-path "test.bin")
+     path
      (lambda (port tmp-path)
        (display (generate-header-bytes payload payload-port) port)
        (display (get-output-bytes payload-port) port)
        ;;(printf "bb : ~v~n" bb)
        ;;(display bb port)
-       )))
+       ))))
 
+(module* main #f
+  ;;[display (equal? 12 (int32-decode (encode-closure int32-encode 12) 0))]
+
+  (write-bin payload (build-path "test.bin"))
   ;;(write (string->bytes/utf-8 (format "test string~n")))
 
   ;; [write-to-file (string->bytes/utf-8 (format "test string~n"))
@@ -130,4 +137,17 @@
   ;;                #:mode 'binary]
   )
 
-(main)
+(module+ test
+  (require rackunit)
+
+  (test-case "int32"
+             (check-equal? (bytes->int32 (int32->bytes 12)) 12)
+             (check-equal? (bytes->int32 (int32->bytes -1234567)) -1234567)
+             (check-equal? (bytes->int32 (int32->bytes 2147483647)) 2147483647)
+             )
+
+  (test-case "word32"
+             (check-equal? (bytes->word32 (word32->bytes 12)) 12)
+             )
+
+  )

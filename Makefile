@@ -6,7 +6,8 @@ INCLUDES := ../stb
 CCFLAGS := $(addprefix -I,$(INCLUDES))
 
 RACKETDIR := /Applications/Racket\ v6.0.1/
-RACKETBIN := $(RACKETDIR)/bin/racket
+RACKETBINDIR := $(RACKETDIR)/bin
+RACKETBIN := $(RACKETBINDIR)/racket
 
 OBJS :=
 OBJS += vm.o
@@ -15,12 +16,16 @@ OBJS += vm.o
 	@echo $@
 	clang ${CCFLAGS} -c $<
 
-all: main
+all: main test.bin
+
+test: all
+	${RACKETBINDIR}/raco test stream.rkt
+	./main test.bin
 
 clean:
 	rm -f ${OBJS} main
 
-main: ${OBJS} test.bin
+main: ${OBJS}
 	@echo $@
 	clang -o $@ ${OBJS}
 
