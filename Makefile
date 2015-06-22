@@ -14,20 +14,20 @@ OBJS += vm.o
 
 %.o : %.cpp
 	@echo $@
-	clang ${CCFLAGS} -c $<
+	clang++ ${CCFLAGS} -c $<
 
 all: main test.bin
 
 test: all
 	${RACKETBINDIR}/raco test stream.rkt
-	./main test.bin
+	./main test
 
 clean:
 	rm -f ${OBJS} main
 
 main: ${OBJS}
 	@echo $@
-	clang -o $@ ${OBJS}
+	clang++ -o $@ ${OBJS}
 
 
 test.bin: stream.rkt

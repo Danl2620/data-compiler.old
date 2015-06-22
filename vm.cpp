@@ -1,9 +1,12 @@
 
+#include <new>
+#include <memory>
+
 #include <stdio.h>
 #include <errno.h>
 #include <assert.h>
 #include <math.h>
-#include <memory>
+#include <string.h>
 
 //#define STB_DEFINE
 #include "stb.h"
@@ -18,7 +21,52 @@ struct FourCC
 
 const unsigned int kMagicDC(FourCC<'D', 'C', '0', '0'>::value);
 
-void hex_dump (void * buffer, int data_size)
+// ------------------------------------------------------------------------------------------------------------------ //
+//  a simple string cache
+// ------------------------------------------------------------------------------------------------------------------ //
+static char s_cache_buffer[1024];
+static const char * s_cache_strings[64];
+static int16_t s_cache_lengths[64];
+static int s_cache_index;
+const char * cache (const char * str)
+{
+	for (int ii = 0; ii < s_cache_index; ++ii)
+	{
+		if (0 == strcmp(str, s_cache_strings[ii]))
+			return s_cache_strings[ii];
+	}
+
+	char * nextstr;
+	if (s_cache_index == 0)
+	{
+		s_cache_strings[0] = nextstr = s_cache_buffer;
+	}
+	else
+	{
+		nextstr = const_cast<char*>(s_cache_strings[s_cache_index-1] + s_cache_lengths[s_cache_index-1] + 1);
+	}
+
+	int len = strlen(str);
+	int remaining = (sizeof(s_cache_buffer) - (nextstr - s_cache_buffer));
+	assert(len < remaining);
+	if (len >= remaining)
+		return nullptr;
+
+	strlcpy(nextstr, str, remaining);
+	s_cache_strings[s_cache_index] = nextstr;
+	s_cache_lengths[s_cache_index] = len;
+	s_cache_index++;
+	return nextstr;
+}
+
+// ------------------------------------------------------------------------------------------------------------------ //
+const void * align_pointer (const void * ptr, int align)
+{
+	return (const void*)((uintptr_t)ptr + (align - (uintptr_t)ptr % align));
+}
+
+// ------------------------------------------------------------------------------------------------------------------ //
+void hex_dump (const void * buffer, int data_size)
 {
 	int lines = data_size/8 + 1;
 
@@ -48,18 +96,102 @@ void hex_dump (void * buffer, int data_size)
 // 		exit(-1); \
 // 	}
 
-int main (int argc, const char * argv[])
+// ------------------------------------------------------------------------------------------------------------------ //
+class string_t
 {
-	if (argc < 2)
-		return -1;
+public:
+	string_t() {}
+	int length () const { return m_length; }
+	const char * c_str () const { return m_string; }
+private:
+	int16_t m_length;
+	char m_string[];
+};
 
-	const char * path = argv[1];
-	printf("reading '%s':\n", path);
+
+
+// ------------------------------------------------------------------------------------------------------------------ //
+class module_t
+{
+public:
+	module_t(const header_t& hdr,
+			 const char * name,
+			 const void * buffer,
+			 const void * alloc_buffer);
+	~module_t();
+	const header_t& get_header() const;
+
+	// debug
+	void debug_dump() const;
+
+	void test1 () const
+	{
+		const void * buffer = m_buffer;
+		printf("test1: %d\n", *(int32_t*)buffer);
+	}
+
+	void test2 () const
+	{
+		const void * buffer = (const void*)((uintptr_t)m_buffer + sizeof(int32_t));
+		printf("test2 (%lu):\n", *(uintptr_t*)buffer);
+		printf("0x%016lx\n", (uintptr_t)buffer);
+		const void * ptr = (const void *)((uintptr_t)buffer + *(uintptr_t*)buffer);
+		printf("0x%016lx\n", (uintptr_t)ptr);
+		string_t * str = (string_t*)ptr;
+		printf("string test: '%s'/%d\n", str->c_str(), str->length());
+	}
+
+private:
+	header_t m_header;
+	const char * m_name;
+	const void * m_buffer;
+	const void * m_alloc_buffer;
+};
+
+
+// ------------------------------------------------------------------------------------------------------------------ //
+module_t::module_t (const header_t& hdr,
+					const char * name,
+					const void * buffer,
+					const void * alloc_buffer)
+	: m_header(hdr)
+	, m_name(cache(name))
+	, m_buffer(buffer)
+	, m_alloc_buffer(alloc_buffer)
+{}
+
+// ------------------------------------------------------------------------------------------------------------------ //
+module_t::~module_t ()
+{
+	free((void*)m_alloc_buffer);
+}
+
+// ------------------------------------------------------------------------------------------------------------------ //
+const header_t& module_t::get_header () const
+{
+	return m_header;
+}
+
+// ------------------------------------------------------------------------------------------------------------------ //
+void module_t::debug_dump () const
+{
+	printf("contents of '%s':\n", m_name);
+	hex_dump(m_buffer, m_header.m_size);
+}
+
+
+// ------------------------------------------------------------------------------------------------------------------ //
+module_t * load_module (const char * module_name)
+{
+	printf("loading module '%s':\n", module_name);
+
+	char path[1024];
+	snprintf(path, sizeof(path), "%s.bin", module_name);
 	FILE * fp = fopen(path,"rb");
 	if (!fp)
 	{
 		printf("Cannot open file (%d)\n", errno);
-		return -1;
+		return nullptr;
 	}
 
 	header_t header;
@@ -67,9 +199,40 @@ int main (int argc, const char * argv[])
 	{
 		printf("Cannot read file (%d)\n", errno);
 		fclose(fp);
-		return -1;
+		return nullptr;
 	}
 
+	size_t align = 16;
+	size_t data_size = header.m_size;
+
+	void * ptr = malloc(data_size + align);
+	uint8 * buffer = (uint8*)align_pointer(ptr, align);
+	if (1 != fread(buffer, data_size, 1, fp))
+	{
+		printf("Error reading data (%d)\n", errno);
+		free(ptr);
+		fclose(fp);
+		return nullptr;
+	}
+	return new module_t(header, module_name, buffer, ptr);
+}
+
+// ------------------------------------------------------------------------------------------------------------------ //
+void free_module (module_t * module)
+{
+	delete module;
+}
+
+// ------------------------------------------------------------------------------------------------------------------ //
+int main (int argc, const char * argv[])
+{
+	if (argc < 2)
+		return -1;
+
+	const char * module_name = argv[1];
+	module_t * module = load_module(module_name);
+
+	const header_t& header = module->get_header();
 	printf("header: \n  0x%08x\n  %d\n  %d\n  0x%08x\n",
 		   header.m_magic,
 		   header.m_version,
@@ -78,32 +241,19 @@ int main (int argc, const char * argv[])
 
 	assert(header.m_magic == kMagicDC);
 	assert(header.m_version == 1);
-	assert(header.m_size > sizeof(header_t));
+	//assert(header.m_size > sizeof(header_t));
 
-	size_t align = 16;
-	size_t data_size = header.m_size - sizeof(header_t);
-	size_t alloc_size = data_size + align;
-
-	void * ptr = malloc(alloc_size);
-	uint8 * buffer = (uint8*)((size_t)ptr + (align - (size_t)ptr % align));
-	if (1 != fread(buffer, data_size, 1, fp))
-	{
-		printf("Error reading data (%d)\n", errno);
-		fclose(fp);
-		return -1;
-	}
-
-	hex_dump(buffer, data_size);
+	module->debug_dump();
+	module->test1();
+	module->test2();
 
 	// verify test entries
-	int32 * pI = (int32*)buffer;
-	assert(*pI == 24);
+	// int32 * pI = (int32*)buffer;
+	// assert(*pI == 24);
 
-	stb_uint64 * pU64 = (stb_uint64*)(buffer + 4);
-	assert(*pU64 == 0xffffffffffffffff);
+	// stb_uint64 * pU64 = (stb_uint64*)(buffer + 4);
+	// assert(*pU64 == 0xffffffffffffffff);
 
-	free(ptr);
-	fclose(fp);
-
+	free_module(module);
 	return 0;
 }
