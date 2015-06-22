@@ -164,7 +164,7 @@
 ;;              )))
 
 ;;
-;; payload needs to be an instance -- an array of values, or a defined struct
+;; payload is a alist of name, instance pairs
 ;;
 
 (define payload
@@ -177,54 +177,33 @@
 ;;  version i4
 ;;  size i4
 ;;  crc32 u4
-;; (define (generate-header-bytes bs bs-port)
-;;   [bytes-append
-;;    #"DC00"
-;;    (int32->bytes 1)
-;;    (int32->bytes (+ 16 (foldl + 0 (map (compose type-size instance-type) bs))))
-;;    (word32->bytes (bytes-crc32 (get-output-bytes bs-port)))
-;;    ])
 
-;; (define (write-inst inst port)
-;;   ((type-write (instance-type inst)) (instance-value inst) payload-port))
+(define (generate-header->bytes payload)
+  [bytes-append
+   #"DC00"
+   (int32->bytes 1)
+   (int32->bytes (for/sum ((inst (map cdr payload))) (size-of inst)))
+   (word32->bytes #xcafebabe)
+   ])
 
 (define (write-bin payload path)
-  ;; (map (lambda (pair)
-  ;;        (let ((name (car pair))
-  ;;              (inst (cdr pair)))
-  ;;          (cons (eq-hash-code name)
-  ;;                (write-inst inst payload-port))))
-  ;;      payload)
-
-  (let ((payload-port (open-output-bytes)))
+  (let ((header-bytes (generate-header->bytes payload))
+        (payload-bytes (bytes-append*
+                        (map
+                         (lambda (pair)
+                           (let ((name (car pair))
+                                 (inst (cdr pair)))
+                             (define-values (bs tree) ((type-write (instance-type inst)) (instance-value inst) 0))
+                             (stitch bs tree)
+                             ))
+                         payload)
+                        )))
     (call-with-atomic-output-file
      path
      (lambda (port tmp-path)
-       ;;(display (generate-header-bytes payload payload-port) port)
-
-       (display
-        [bytes-append
-         #"DC00"
-         (int32->bytes 1)
-         (int32->bytes (for/sum ((inst (map cdr payload))) (size-of inst)))
-         (word32->bytes #xcafebabe)
-         ] port)
-
-       (for-each
-        (lambda (pair)
-          (let ((name (car pair))
-                (inst (cdr pair)))
-            (define-values (bs tree) ((type-write (instance-type inst)) (instance-value inst) 0))
-            (display (stitch bs tree) port)
-            )
-          )
-        payload)
-
-       ;;(display (get-output-bytes payload-port) port)
-       ;;(printf "bb : ~v~n" bb)
-       ;;(display bb port)
-       )))
-  )
+       (display header-bytes port)
+       (display payload-bytes port)
+       ))))
 
 (module* main #f
   ;;[display (equal? 12 (int32-decode (encode-closure int32-encode 12) 0))]
@@ -255,10 +234,10 @@
              )
 
 
-  (let ((w (type-write string))
-        (r (type-read string)))
-    (define-values (bs tree) (w "asdf" 0))
-    (display (stitch bs tree))
-    )
+  ;; (let ((w (type-write string))
+  ;;       (r (type-read string)))
+  ;;   (define-values (bs tree) (w "asdf" 0))
+  ;;   (display (stitch bs tree))
+  ;;   )
 
   )
