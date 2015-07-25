@@ -14,8 +14,6 @@
  "integer.rkt"
  ]
 
-;;(struct type (size ->bytes))
-
 (struct type (read write size-of))
 (struct instance (type value))
 
@@ -28,33 +26,6 @@
 ;; write : (-> any/c offset void?)
 
 (struct addr*thunk (addr thunk))
-(struct branch (left right))
-
-(define (stitch vbs addr*et-tree)
-  (match addr*et-tree
-    [(list)
-     vbs]
-    [(list-rest (addr*thunk addr et) more)
-     (printf "vbs: ~v~n" vbs)
-     (define start (bytes-length vbs))
-     (define-values (et-bs et-mores) (et start))
-     (define nbs (bytes-append vbs et-bs))
-     ;; Replace addr in nbs with addr (patch)
-     (printf "nbs: ~v~n" nbs)
-     (integer->integer-bytes start 8 #f (*big-endian*) nbs addr)
-;;     (integer->integer-bytes #x87654321 4 #f #t nbs addr)
-     (stitch nbs (branch more et-mores))]
-    [(branch (branch left-left-b left-right-b) right-b)
-     (stitch vbs (branch left-left-b
-                         (branch left-right-b
-                                 right-b)))]
-    [(branch (list) right-tree)
-     (stitch vbs right-tree)]
-    [(branch (list-rest first-on-left rest-of-left) right-tree)
-     (stitch vbs
-             (cons first-on-left
-                   (branch rest-of-left
-                           right-tree)))]))
 
 (define (read-number bytes->num)
   (lambda (bs start)
@@ -140,6 +111,34 @@
    (int32->bytes (for/sum ((inst (map cdr payload))) (size-of inst)))
    (word32->bytes #xcafebabe)
    ])
+
+(struct branch (left right))
+
+(define (stitch vbs addr*et-tree)
+  (match addr*et-tree
+    [(list)
+     vbs]
+    [(list-rest (addr*thunk addr et) more)
+     (printf "vbs: ~v~n" vbs)
+     (define start (bytes-length vbs))
+     (define-values (et-bs et-mores) (et start))
+     (define nbs (bytes-append vbs et-bs))
+     ;; Replace addr in nbs with addr (patch)
+     (printf "nbs: ~v~n" nbs)
+     (integer->integer-bytes start 8 #f (*big-endian*) nbs addr)
+;;     (integer->integer-bytes #x87654321 4 #f #t nbs addr)
+     (stitch nbs (branch more et-mores))]
+    [(branch (branch left-left-b left-right-b) right-b)
+     (stitch vbs (branch left-left-b
+                         (branch left-right-b
+                                 right-b)))]
+    [(branch (list) right-tree)
+     (stitch vbs right-tree)]
+    [(branch (list-rest first-on-left rest-of-left) right-tree)
+     (stitch vbs
+             (cons first-on-left
+                   (branch rest-of-left
+                           right-tree)))]))
 
 (define (write-bin payload path)
   (let ((header-bytes (generate-header->bytes payload))

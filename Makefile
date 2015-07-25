@@ -30,5 +30,5 @@ main: ${OBJS}
 	clang++ -o $@ ${OBJS}
 
 
-test.bin: stream.rkt
+test.bin: stream.rkt integer.rkt crc32.rkt
 	${RACKETBIN} stream.rkt
