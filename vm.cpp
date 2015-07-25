@@ -113,6 +113,22 @@ private:
 // ------------------------------------------------------------------------------------------------------------------ //
 class module_t
 {
+	typedef uint32_t symbol_t;
+	struct value_t
+	{
+		union
+		{
+			symbol_t m_symbol;
+			int64_t m_integer;
+		};
+	};
+
+	struct entry_t
+	{
+		symbol_t m_symbol;
+		int32_t m_offset;;
+	};
+
 public:
 	module_t(const header_t& hdr,
 			 const char * name,
@@ -144,7 +160,13 @@ public:
 private:
 	header_t m_header;
 	const char * m_name;
-	const void * m_buffer;
+
+	union
+	{
+		const void * m_buffer;
+		const entry_t m_entries[];
+	};
+
 	const void * m_alloc_buffer;
 };
 
@@ -177,6 +199,12 @@ void module_t::debug_dump () const
 {
 	printf("contents of '%s':\n", m_name);
 	hex_dump(m_buffer, m_header.m_size);
+
+	printf("entries:\n");
+	for (int ii = 0; ii < 3; ++ii)
+	{
+		printf("%d: %d\n", ii, m_entries[ii].m_symbol);
+	}
 }
 
 
@@ -244,8 +272,8 @@ int main (int argc, const char * argv[])
 	//assert(header.m_size > sizeof(header_t));
 
 	module->debug_dump();
-	module->test1();
-	module->test2();
+	//module->test1();
+	//module->test2();
 
 	// verify test entries
 	// int32 * pI = (int32*)buffer;

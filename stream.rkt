@@ -9,70 +9,10 @@
  racket/file
  racket/list
  racket/match
+ "params.rkt"
+ "crc32.rkt"
+ "integer.rkt"
  ]
-
-(define *big-endian* #f)
-
-(define (bytes-crc32 data)
-  (bitwise-xor
-   (for/fold ([accum #xFFFFFFFF])
-     ([byte  (in-bytes data)])
-     (for/fold ([accum (bitwise-xor accum byte)])
-       ([num (in-range 0 8)])
-       (bitwise-xor (quotient accum 2)
-                    (* #xEDB88320 (bitwise-and accum 1)))))
-   #xFFFFFFFF))
-
-(define (crc32 s)
-  (bytes-crc32 (string->bytes/utf-8 s)))
-
-(define (int16->bytes v) (integer->integer-bytes v 2 #t *big-endian*))
-(define (bytes->int16 bs #:offset (offset 0))
-  (integer-bytes->integer bs
-                          #t
-                          *big-endian*
-                          offset
-                          (+ offset 2)))
-
-(define (int32->bytes v) (integer->integer-bytes v 4 #t *big-endian*))
-(define (bytes->int32 bs #:offset (offset 0))
-  (integer-bytes->integer bs
-                          #t
-                          *big-endian*
-                          offset
-                          (+ offset 4)))
-
-
-(define (int64->bytes v) (integer->integer-bytes v 8 #t *big-endian*))
-(define (bytes->int64 bs #:offset (offset 0))
-  (integer-bytes->integer bs
-                          #t
-                          *big-endian*
-                          offset
-                          (+ offset 8)))
-
-(define (word32->bytes v) (integer->integer-bytes v 4 #f))
-(define (bytes->word32 bs #:offset (offset 0))
-  (integer-bytes->integer bs
-                          #f
-                          *big-endian*
-                          offset
-                          (+ offset 4)))
-
-(define (word64->bytes v) (integer->integer-bytes v 8 #f))
-(define (bytes->word64 bs #:offset (offset 0))
-  (integer-bytes->integer bs
-                          #f
-                          *big-endian*
-                          offset
-                          (+ offset 8)))
-
-(define (real32->bytes v) (real->floating-point-bytes v 4 *big-endian*))
-(define (bytes->real32 bs #:offset (offset 0))
-  (floating-point-bytes->real bs
-                              *big-endian*
-                              offset
-                              (+ offset 4)))
 
 ;;(struct type (size ->bytes))
 
@@ -95,11 +35,13 @@
     [(list)
      vbs]
     [(list-rest (addr*thunk addr et) more)
+     (printf "vbs: ~v~n" vbs)
      (define start (bytes-length vbs))
      (define-values (et-bs et-mores) (et start))
      (define nbs (bytes-append vbs et-bs))
      ;; Replace addr in nbs with addr (patch)
-     (integer->integer-bytes start 8 #f *big-endian* nbs addr)
+     (printf "nbs: ~v~n" nbs)
+     (integer->integer-bytes start 8 #f (*big-endian*) nbs addr)
 ;;     (integer->integer-bytes #x87654321 4 #f #t nbs addr)
      (stitch nbs (branch more et-mores))]
     [(branch (branch left-left-b left-right-b) right-b)
@@ -147,6 +89,19 @@
                           #:size-of (lambda (inst)
                                       (+ 2 (string-length (instance-value inst)))
                                       )))
+(define (pointer type)
+  (make-type #:read (lambda (bs start)
+                      (let ((offset (bytes->word64 bs #:offset start)))
+                        ((type-read) bs offset)))
+             #:write (lambda (val off)
+                       (values (word64->bytes #xffffffffffffffff)
+                               (list (addr*thunk
+                                      off
+                                      (λ (thunk-off)
+                                        ((type-write type) val thunk-off)
+                                        )))))
+             #:size-of (lambda (inst) 8)))
+
 
 (define (size-of inst)
   ((type-size-of (instance-type inst)) inst))
@@ -188,16 +143,39 @@
 
 (define (write-bin payload path)
   (let ((header-bytes (generate-header->bytes payload))
-        (payload-bytes (bytes-append*
-                        (map
-                         (lambda (pair)
-                           (let ((name (car pair))
-                                 (inst (cdr pair)))
-                             (define-values (bs tree) ((type-write (instance-type inst)) (instance-value inst) 0))
-                             (stitch bs tree)
-                             ))
-                         payload)
-                        )))
+        (payload-bytes (bytes-append
+                        ;; write name/offsets, then items
+                        (let* ((bss (map
+                                     (lambda (pair)
+                                       (let ((inst (cdr pair)))
+                                         (let-values [((bs tree) ((type-write (instance-type inst)) (instance-value inst) 0))]
+                                           (stitch bs tree))))
+                                     payload))
+                               (lens (map bytes-length bss))
+                               (offset 0)
+                               (offsets (map (lambda (off)
+                                               (let ((v (+ offset off)))
+                                                 (set! offset (+ offset off))
+                                                 v))
+                                             lens)))
+
+                          (bytes-append
+                           ;; write name/offset pairs
+                           (bytes-append*
+                            (map
+                             (lambda (pair off)
+                               (let ((name (car pair))
+                                     (inst (cdr pair)))
+                                 (bytes-append
+                                  (word32->bytes (crc32/string (symbol->string name)))
+                                  (word32->bytes off)
+                                  )))
+                             payload
+                             offsets))
+
+                           ;; write items
+                           (bytes-append* bss))
+                          ))))
     (call-with-atomic-output-file
      path
      (lambda (port tmp-path)
@@ -206,14 +184,7 @@
        ))))
 
 (module* main #f
-  ;;[display (equal? 12 (int32-decode (encode-closure int32-encode 12) 0))]
-
   (write-bin payload (build-path "test.bin"))
-  ;;(write (string->bytes/utf-8 (format "test string~n")))
-
-  ;; [write-to-file (string->bytes/utf-8 (format "test string~n"))
-  ;;                (build-path "test.bin")
-  ;;                #:mode 'binary]
   )
 
 (module+ test
