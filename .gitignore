@@ -1,4 +1,6 @@
 .#*
 *.o
 *.bin
+*.js
+*.css
 main

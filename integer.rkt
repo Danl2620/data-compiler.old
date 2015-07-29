@@ -66,3 +66,21 @@
                               (*big-endian*)
                               offset
                               (+ offset 4)))
+
+(module+ test
+  (require rackunit)
+
+  (test-case "int32"
+             (check-equal? (bytes->int32 (int32->bytes 12)) 12)
+             (check-equal? (bytes->int32 (int32->bytes -1234567)) -1234567)
+             (check-equal? (bytes->int32 (int32->bytes 2147483647)) 2147483647)
+             )
+
+  (test-case "word32"
+             (check-equal? (bytes->word32 (word32->bytes 12)) 12)
+             )
+
+  (test-case "word64"
+             (check-equal? (bytes->word64 (word64->bytes #xfedcba9876543210)) #xfedcba9876543210)
+             )
+  )

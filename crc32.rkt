@@ -17,3 +17,11 @@
 
 (define (crc32/string s)
   (crc32/bytes (string->bytes/utf-8 s)))
+
+(module+ test
+  (require rackunit)
+
+  (test-case "crc32"
+             (check-equal? (crc32/string "asdf") 1361703869))
+
+  )

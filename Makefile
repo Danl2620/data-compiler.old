@@ -19,7 +19,7 @@ OBJS += vm.o
 all: main test.bin
 
 test: all
-	${RACKETBINDIR}/raco test stream.rkt
+	${RACKETBINDIR}/raco test *.rkt
 	./main test
 
 clean:

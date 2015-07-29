@@ -119,12 +119,12 @@
     [(list)
      vbs]
     [(list-rest (addr*thunk addr et) more)
-     (printf "vbs: ~v~n" vbs)
+     ;;(printf "vbs: ~v~n" vbs)
      (define start (bytes-length vbs))
      (define-values (et-bs et-mores) (et start))
      (define nbs (bytes-append vbs et-bs))
      ;; Replace addr in nbs with addr (patch)
-     (printf "nbs: ~v~n" nbs)
+     ;;(printf "nbs: ~v~n" nbs)
      (integer->integer-bytes start 8 #f (*big-endian*) nbs addr)
 ;;     (integer->integer-bytes #x87654321 4 #f #t nbs addr)
      (stitch nbs (branch more et-mores))]
@@ -188,26 +188,4 @@
 
 (module+ test
   (require rackunit)
-
-  (test-case "int32"
-             (check-equal? (bytes->int32 (int32->bytes 12)) 12)
-             (check-equal? (bytes->int32 (int32->bytes -1234567)) -1234567)
-             (check-equal? (bytes->int32 (int32->bytes 2147483647)) 2147483647)
-             )
-
-  (test-case "word32"
-             (check-equal? (bytes->word32 (word32->bytes 12)) 12)
-             )
-
-  (test-case "word64"
-             (check-equal? (bytes->word64 (word64->bytes #xfedcba9876543210)) #xfedcba9876543210)
-             )
-
-
-  ;; (let ((w (type-write string))
-  ;;       (r (type-read string)))
-  ;;   (define-values (bs tree) (w "asdf" 0))
-  ;;   (display (stitch bs tree))
-  ;;   )
-
   )
