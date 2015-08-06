@@ -80,6 +80,13 @@
                    (branch rest-of-left
                            right-tree)))]))
 
+(define (encode inst)
+  (let-values [((bs tree) ((type-write (instance-type inst)) (instance-value inst) 0))]
+                                           (stitch bs tree)))
+
+(define (decode bs type)
+  ((type-read type) bs 0))
+
 (define (write-bin payload path)
   (let ((header-bytes (generate-header->bytes payload))
         (payload-bytes (bytes-append
@@ -87,8 +94,7 @@
                         (let* ((bss (map
                                      (lambda (pair)
                                        (let ((inst (cdr pair)))
-                                         (let-values [((bs tree) ((type-write (instance-type inst)) (instance-value inst) 0))]
-                                           (stitch bs tree))))
+                                         (encode inst)))
                                      payload))
                                (lens (map bytes-length bss))
                                (offset 0)
@@ -128,4 +134,16 @@
 
 (module+ test
   (require rackunit)
+
+  (define (check-int32 val)
+    (check-true (integer? val))
+    (check-= val (decode (encode (instance int32 val)) int32) 0))
+
+  (test-case "int32"
+             (check-int32 24)
+             (check-int32 2147483647)
+             (check-int32 0)
+             (check-int32 -1241)
+             (check-int32 -2147483648)
+             )
   )
