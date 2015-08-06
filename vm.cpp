@@ -23,8 +23,7 @@ struct FourCC
     static const unsigned int value = (((((d << 8) | c) << 8) | b) << 8) | a;
 };
 
-const unsigned int kMagicDC(FourCC<'D', 'C', '0', '0'>::value);
-
+const unsigned int kMagicDC(FourCC<'F', 'r', 'a', 'c'>::value);
 
 // ------------------------------------------------------------------------------------------------------------------ //
 const void * align_pointer (const void * ptr, int align)
@@ -93,7 +92,7 @@ class module_t
 	struct entry_t
 	{
 		symbol_t m_symbol;
-		int32_t m_offset;;
+		int32_t m_offset;
 	};
 
 public:
@@ -127,13 +126,11 @@ public:
 private:
 	header_t m_header;
 	const char * m_name;
-
 	union
 	{
 		const void * m_buffer;
-		const entry_t m_entries[];
+		const entry_t * m_entries;
 	};
-
 	const void * m_alloc_buffer;
 };
 
