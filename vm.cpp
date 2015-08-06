@@ -1,3 +1,6 @@
+/*
+ * Copyright 2015 Dan Liebgold
+ */
 
 #include <new>
 #include <memory>
@@ -12,6 +15,7 @@
 #include "stb.h"
 
 #include "vm.h"
+#include "string-utils.h"
 
 template <int a, int b, int c, int d>
 struct FourCC
@@ -21,43 +25,6 @@ struct FourCC
 
 const unsigned int kMagicDC(FourCC<'D', 'C', '0', '0'>::value);
 
-// ------------------------------------------------------------------------------------------------------------------ //
-//  a simple string cache
-// ------------------------------------------------------------------------------------------------------------------ //
-static char s_cache_buffer[1024];
-static const char * s_cache_strings[64];
-static int16_t s_cache_lengths[64];
-static int s_cache_index;
-const char * cache (const char * str)
-{
-	for (int ii = 0; ii < s_cache_index; ++ii)
-	{
-		if (0 == strcmp(str, s_cache_strings[ii]))
-			return s_cache_strings[ii];
-	}
-
-	char * nextstr;
-	if (s_cache_index == 0)
-	{
-		s_cache_strings[0] = nextstr = s_cache_buffer;
-	}
-	else
-	{
-		nextstr = const_cast<char*>(s_cache_strings[s_cache_index-1] + s_cache_lengths[s_cache_index-1] + 1);
-	}
-
-	int len = strlen(str);
-	int remaining = (sizeof(s_cache_buffer) - (nextstr - s_cache_buffer));
-	assert(len < remaining);
-	if (len >= remaining)
-		return nullptr;
-
-	strlcpy(nextstr, str, remaining);
-	s_cache_strings[s_cache_index] = nextstr;
-	s_cache_lengths[s_cache_index] = len;
-	s_cache_index++;
-	return nextstr;
-}
 
 // ------------------------------------------------------------------------------------------------------------------ //
 const void * align_pointer (const void * ptr, int align)
@@ -177,7 +144,7 @@ module_t::module_t (const header_t& hdr,
 					const void * buffer,
 					const void * alloc_buffer)
 	: m_header(hdr)
-	, m_name(cache(name))
+	, m_name(string::cache(name))
 	, m_buffer(buffer)
 	, m_alloc_buffer(alloc_buffer)
 {}

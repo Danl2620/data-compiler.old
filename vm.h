@@ -1,8 +1,9 @@
-
 /*
- *
- *
+ * Copyright 2015 Dan Liebgold
  */
+
+#ifndef VM_H
+#define VM_H
 
 struct header_t
 {
@@ -11,3 +12,5 @@ struct header_t
 	int32 m_size;
 	uint32 m_crc32;
 };
+
+#endif // VM_H

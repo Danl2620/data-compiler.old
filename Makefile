@@ -11,6 +11,7 @@ RACKETBIN := $(RACKETBINDIR)/racket
 
 OBJS :=
 OBJS += vm.o
+OBJS += string-utils.o
 
 %.o : %.cpp
 	@echo $@

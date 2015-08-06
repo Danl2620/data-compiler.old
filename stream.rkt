@@ -73,6 +73,18 @@
                                         )))))
              #:size-of (lambda (inst) 8)))
 
+(module+ test
+  (require rackunit)
+
+  (test-case "int32"
+             (check-equal? ((type-read int32) (let-values [((bs unused) ((type-write int32) 12 0))]
+                                                          bs) 0) 12)
+             )
+  (test-case "int32"
+             (check-equal? ((type-read int32) (let-values [((bs unused) ((type-write int32) -82447 0))]
+                                                bs) 0) -82447)
+             )
+  )
 
 (define (size-of inst)
   ((type-size-of (instance-type inst)) inst))
