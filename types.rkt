@@ -78,6 +78,9 @@
                                         )))))
              #:size-of (lambda (inst) 8)))
 
+(define (size-of inst)
+  ((type-size-of (instance-type inst)) inst))
+
 (module+ test
   (require rackunit)
 
@@ -90,6 +93,3 @@
                                                 bs) 0) -82447)
              )
   )
-
-(define (size-of inst)
-  ((type-size-of (instance-type inst)) inst))

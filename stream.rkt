@@ -8,13 +8,11 @@
  racket/bytes
  racket/file
  racket/list
- "integer.rkt"
  "crc32.rkt"
+ "integer.rkt"
  "types.rkt"
  "encode.rkt"
  ]
-
-
 
 ;; (define test-struct-type
 ;;   ;; struct consisting of an string and an integer
@@ -51,16 +49,11 @@
    (word32->bytes #xcafebabe)
    ])
 
-
 (define (write-bin payload path)
   (let ((header-bytes (generate-header->bytes payload))
         (payload-bytes (bytes-append
                         ;; write name/offsets, then items
-                        (let* ((bss (map
-                                     (lambda (pair)
-                                       (let ((inst (cdr pair)))
-                                         (encode inst)))
-                                     payload))
+                        (let* ((bss (map (compose encode cdr) payload))
                                (lens (map bytes-length bss))
                                (offset 0)
                                (offsets (map (lambda (off)
