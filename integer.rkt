@@ -76,8 +76,17 @@
              (check-equal? (bytes->int32 (int32->bytes 2147483647)) 2147483647)
              )
 
+  (test-case "int64"
+             (check-equal? (bytes->int64 (int64->bytes 12)) 12)
+             (check-equal? (bytes->int64 (int64->bytes -1234567)) -1234567)
+             (check-equal? (bytes->int64 (int64->bytes 2147483647)) 2147483647)
+             (check-equal? (bytes->int64 (int64->bytes 4294967296)) 4294967296)
+             )
+
   (test-case "word32"
              (check-equal? (bytes->word32 (word32->bytes 12)) 12)
+             (check-equal? (bytes->word32 (word32->bytes 2147483647)) 2147483647)
+             (check-equal? (bytes->word32 (word32->bytes 4294967295)) 4294967295)
              )
 
   (test-case "word64"

@@ -8,11 +8,10 @@
  racket/bytes
  racket/file
  racket/list
- racket/match
- "types.rkt"
  "integer.rkt"
  "crc32.rkt"
- "params.rkt"
+ "types.rkt"
+ "encode.rkt"
  ]
 
 
@@ -52,40 +51,6 @@
    (word32->bytes #xcafebabe)
    ])
 
-(struct branch (left right))
-
-(define (stitch vbs addr*et-tree)
-  (match addr*et-tree
-    [(list)
-     vbs]
-    [(list-rest (addr*thunk addr et) more)
-     ;;(printf "vbs: ~v~n" vbs)
-     (define start (bytes-length vbs))
-     (define-values (et-bs et-mores) (et start))
-     (define nbs (bytes-append vbs et-bs))
-     ;; Replace addr in nbs with addr (patch)
-     ;;(printf "nbs: ~v~n" nbs)
-     (integer->integer-bytes start 8 #f (*big-endian*) nbs addr)
-;;     (integer->integer-bytes #x87654321 4 #f #t nbs addr)
-     (stitch nbs (branch more et-mores))]
-    [(branch (branch left-left-b left-right-b) right-b)
-     (stitch vbs (branch left-left-b
-                         (branch left-right-b
-                                 right-b)))]
-    [(branch (list) right-tree)
-     (stitch vbs right-tree)]
-    [(branch (list-rest first-on-left rest-of-left) right-tree)
-     (stitch vbs
-             (cons first-on-left
-                   (branch rest-of-left
-                           right-tree)))]))
-
-(define (encode inst)
-  (let-values [((bs tree) ((type-write (instance-type inst)) (instance-value inst) 0))]
-                                           (stitch bs tree)))
-
-(define (decode bs type)
-  ((type-read type) bs 0))
 
 (define (write-bin payload path)
   (let ((header-bytes (generate-header->bytes payload))
@@ -130,20 +95,4 @@
 
 (module* main #f
   (write-bin payload (build-path "test.bin"))
-  )
-
-(module+ test
-  (require rackunit)
-
-  (define (check-int32 val)
-    (check-true (integer? val))
-    (check-= val (decode (encode (instance int32 val)) int32) 0))
-
-  (test-case "int32"
-             (check-int32 24)
-             (check-int32 2147483647)
-             (check-int32 0)
-             (check-int32 -1241)
-             (check-int32 -2147483648)
-             )
   )
