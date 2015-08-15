@@ -1,4 +1,4 @@
 # fracas
 
     > make
-    > ./main
+    > ./main test
