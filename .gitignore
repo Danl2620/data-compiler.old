@@ -1,6 +1,7 @@
-.#*
-*.o
 *.bin
-*.js
 *.css
+*.js
+*.o
+.#*
+/compiled
 main
