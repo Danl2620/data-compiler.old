@@ -19,7 +19,7 @@
  pointer
  ]
 
-(struct type (name read write size-of))
+(struct type (read write size-of))
 (struct instance (type value))
 
 (define (make-type #:read read
@@ -78,8 +78,8 @@
                                         )))))
              #:size-of (lambda (inst) 8)))
 
-(define (array type)
-  )
+;; (define (array type)
+;;   )
 
 
 (define (size-of inst)
