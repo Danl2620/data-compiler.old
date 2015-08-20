@@ -41,5 +41,5 @@
      )))
 
 (module* main #f
-  (write-bin payload (build-path "test.bin"))
+  (write-bin payload (build-path "stream-test.bin"))
   )
