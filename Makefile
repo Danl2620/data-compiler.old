@@ -5,7 +5,7 @@ INCLUDES := ../stb
 
 CCFLAGS := $(addprefix -I,$(INCLUDES))
 
-RACKETDIR := /Applications/Racket\ v6.0.1/
+RACKETDIR := /Applications/Racket\ v6.2.1/
 RACKETBINDIR := $(RACKETDIR)/bin
 RACKETBIN := $(RACKETBINDIR)/racket
 

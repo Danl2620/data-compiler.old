@@ -39,10 +39,16 @@ void hex_dump (const void * buffer, int data_size)
 	uint8 * ptr = (uint8*)buffer;
 	for (int ii = 0; ii < lines; ++ii)
 	{
-		printf("%016lx : %02x %02x %02x %02x %02x %02x %02x %02x\n",
-			   (uintptr_t)ptr,
+		printf("%016lx (%08x) : %02x %02x %02x %02x %02x %02x %02x %02x  ",
+			   (uintptr_t)ptr, ii*8,
 			   ptr[0], ptr[1], ptr[2], ptr[3],
 			   ptr[4], ptr[5], ptr[6], ptr[7]);
+
+#define CHAR(c) isalnum(c)?c:'.'
+		printf("%c%c%c%c%c%c%c%c\n",
+			   CHAR(ptr[0]), CHAR(ptr[1]), CHAR(ptr[2]), CHAR(ptr[3]),
+			   CHAR(ptr[4]), CHAR(ptr[5]), CHAR(ptr[6]), CHAR(ptr[7]));
+#undef CHAR
 		ptr += 8;
 	}
 }
@@ -175,8 +181,6 @@ void module_t::debug_dump () const
 // ------------------------------------------------------------------------------------------------------------------ //
 module_t * load_module (const char * module_name)
 {
-	printf("loading module '%s':\n", module_name);
-
 	char path[1024];
 	snprintf(path, sizeof(path), "%s.bin", module_name);
 	FILE * fp = fopen(path,"rb");
@@ -222,13 +226,15 @@ int main (int argc, const char * argv[])
 		return -1;
 
 	const char * module_name = argv[1];
+	printf("loading module '%s',", module_name);
 	module_t * module = load_module(module_name);
 
 	const header_t& header = module->get_header();
-	printf("header: \n  0x%08x\n  %d\n  %d\n  0x%08x\n",
-		   header.m_magic,
+	printf(" type: '%c%c%c%c', version: %d, size: %d, count: %d crc32: 0x%08x\n\n",
+		   header.m_magic&255, (header.m_magic>>8)&255, (header.m_magic>>16)&255, (header.m_magic>>24)&255,
 		   header.m_version,
 		   header.m_size,
+		   header.m_count,
 		   header.m_crc32);
 
 	assert(header.m_magic == kMagicDC);

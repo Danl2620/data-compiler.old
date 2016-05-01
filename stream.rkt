@@ -24,22 +24,21 @@
 ;;               (bytes-append
 ;;              )))
 
-;;
-;; payload is a alist of name, instance pairs
-;;
 
-(define payload
-  `((test-int . ,(instance int32 24))
-    (test-string . ,(instance string "this is a test string of utf-8 characters, including a line of Greek: Σὲ γνωρίζω ἀπὸ τὴν κόψη, and some Amharic: ሰማይ አይታረስ ንጉሥ አይከሰስ።. Thanks."))
-    (test-word64 . ,(instance word64 #xffffffffffffffff))))
+(define test-module
+  (fracas-module
+	  (vector 'test-int 'test-string 'test-word64)
+	  (vector (instance int32 24)
+			  (instance string "this is a test string of utf-8 characters, including a line of Greek: Σὲ γνωρίζω ἀπὸ τὴν κόψη, and some Amharic: ሰማይ አይታረስ ንጉሥ አይከሰስ።. Thanks.")
+			  (instance word64 #xffffffffffffffff))))
 
-(define (write-bin payload path)
+(define (write-bin mod path)
   (call-with-atomic-output-file
    path
    (lambda (port tmp-path)
-     (display (make-module-bytes payload) port)
+     (display (make-module-bytes mod) port)
      )))
 
 (module* main #f
-  (write-bin payload (build-path "test.bin"))
+  (write-bin test-module (build-path "test.bin"))
   )

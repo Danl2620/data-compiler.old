@@ -53,17 +53,13 @@
                                           (len (bytes->int16 bs #:offset ptr)))
                                      (bytes->string/utf-8 bs #f (+ ptr 2) (+ ptr 2 len))))
                           #:write (lambda (val off)
-                                    (values
-                                     (word64->bytes #xffffffffffffffff)
-                                     (list (addr*thunk
-                                            off
-                                            (lambda (thunk-off)
-                                              (values (bytes-append
-                                                       (int16->bytes (string-length val))
-                                                       (string->bytes/utf-8 val))
-                                                      '()))))))
+									(values (bytes-append
+											 (int16->bytes (string-length val))
+											 (string->bytes/utf-8 val))
+											'()
+											))
                           #:size-of (lambda (inst)
-                                      (+ 2 (string-length (instance-value inst)))
+                                      (+ 2 (bytes-length (string->bytes/utf-8 (instance-value inst))))
                                       )))
 (define (pointer type)
   (make-type #:read (lambda (bs start)

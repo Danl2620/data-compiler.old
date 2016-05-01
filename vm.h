@@ -10,6 +10,7 @@ struct header_t
 	uint32 m_magic;
 	int32 m_version;
 	int32 m_size;
+	int32 m_count;
 	uint32 m_crc32;
 };
 
