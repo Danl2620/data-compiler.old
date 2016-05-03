@@ -130,12 +130,12 @@ public:
 	}
 
 private:
-	header_t m_header;
 	const char * m_name;
+	header_t m_header;
 	union
 	{
-		const void * m_buffer;
 		const entry_t * m_entries;
+		const void * m_buffer;
 	};
 	const void * m_alloc_buffer;
 };
