@@ -70,89 +70,6 @@ void hex_dump (const void * buffer, int data_size)
 // 	}
 
 // ------------------------------------------------------------------------------------------------------------------ //
-class string_t
-{
-public:
-	string_t() {}
-	int length () const { return m_length; }
-	const char * c_str () const { return m_string; }
-private:
-	int16_t m_length;
-	char m_string[];
-};
-
-
-
-// ------------------------------------------------------------------------------------------------------------------ //
-class module_t
-{
-	typedef uint32_t symbol_t;
-	struct value_t
-	{
-		union
-		{
-			symbol_t m_symbol;
-			int64_t m_integer;
-		};
-	};
-
-	struct entry_t
-	{
-		symbol_t m_symbol;
-		int32_t m_offset;
-	};
-
-public:
-	module_t(const header_t& hdr,
-			 const char * name,
-			 const void * buffer,
-			 const void * alloc_buffer);
-	~module_t();
-	const header_t& get_header() const;
-
-	// debug
-	void debug_dump() const;
-
-	void test1 () const
-	{
-		printf("test1: 0x%016lx\n", m_start);
-	}
-
-	void test2 () const
-	{
-		{
-			const int32_t * val = new ((void*)(base() + m_entries[0].m_offset)) int32_t;
-			printf("0: %d\n", *val);
-		}
-
-		const string_t * str = new ((void*)(base() + m_entries[1].m_offset)) string_t;
-		printf("1: '%s'/%d/%lu\n", str->c_str(), str->length(), strlen(str->c_str()));
-
-		{
-			const uint64_t * val = new ((void*)(base() + m_entries[2].m_offset)) uint64_t;
-			printf("2: 0x%016llx\n", *val);
-		}
-	}
-
-	intptr_t base () const
-	{
-		return m_start + m_header.m_count*sizeof(entry_t);
-	}
-
-private:
-	const char * m_name;
-	header_t m_header;
-	union
-	{
-		const entry_t * m_entries;
-		intptr_t m_start;
-		const void * m_pointer;
-	};
-	const void * m_alloc_buffer;
-};
-
-
-// ------------------------------------------------------------------------------------------------------------------ //
 module_t::module_t (const header_t& hdr,
 					const char * name,
 					const void * buffer,
@@ -173,6 +90,35 @@ module_t::~module_t ()
 const header_t& module_t::get_header () const
 {
 	return m_header;
+}
+
+// ------------------------------------------------------------------------------------------------------------------ //
+void module_t::test1 () const
+{
+	printf("test1: 0x%016lx\n", m_start);
+}
+
+// ------------------------------------------------------------------------------------------------------------------ //
+void module_t::test2 () const
+{
+	{
+		const int32_t * val = new ((void*)(base() + m_entries[0].m_offset)) int32_t;
+		printf("0: %d\n", *val);
+	}
+
+	const string_t * str = new ((void*)(base() + m_entries[1].m_offset)) string_t;
+	printf("1: '%s'/%d/%lu\n", str->c_str(), str->length(), strlen(str->c_str()));
+
+	{
+		const uint64_t * val = new ((void*)(base() + m_entries[2].m_offset)) uint64_t;
+		printf("2: 0x%016llx\n", *val);
+	}
+}
+
+// ------------------------------------------------------------------------------------------------------------------ //
+intptr_t module_t::base () const
+{
+	return m_start + m_header.m_count*sizeof(entry_t);
 }
 
 // ------------------------------------------------------------------------------------------------------------------ //
