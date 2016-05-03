@@ -29,7 +29,7 @@
   (fracas-module
 	  (vector 'test-int 'test-string 'test-word64)
 	  (vector (instance int32 24)
-			  (instance string "this is a test string of utf-8 characters, including a line of Greek: Σὲ γνωρίζω ἀπὸ τὴν κόψη, and some Amharic: ሰማይ አይታረስ ንጉሥ አይከሰስ።. Thanks.")
+			  (instance string "this is a string of utf-8 characters, including a line of Greek: Σὲ γνωρίζω ἀπὸ τὴν κόψη, and some Amharic: ሰማይ አይታረስ ንጉሥ አይከሰስ።. Thanks.")
 			  (instance word64 #xffffffffffffffff))))
 
 (define (write-bin mod path)

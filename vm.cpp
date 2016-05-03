@@ -115,19 +115,28 @@ public:
 
 	void test1 () const
 	{
-		const void * buffer = m_buffer;
-		printf("test1: %d\n", *(int32_t*)buffer);
+		printf("test1: 0x%016lx\n", m_start);
 	}
 
 	void test2 () const
 	{
-		const void * buffer = (const void*)((uintptr_t)m_buffer + sizeof(int32_t));
-		printf("test2 (%lu):\n", *(uintptr_t*)buffer);
-		printf("0x%016lx\n", (uintptr_t)buffer);
-		const void * ptr = (const void *)((uintptr_t)buffer + *(uintptr_t*)buffer);
-		printf("0x%016lx\n", (uintptr_t)ptr);
-		string_t * str = (string_t*)ptr;
-		printf("string test: '%s'/%d\n", str->c_str(), str->length());
+		{
+			const int32_t * val = new ((void*)(base() + m_entries[0].m_offset)) int32_t;
+			printf("0: %d\n", *val);
+		}
+
+		const string_t * str = new ((void*)(base() + m_entries[1].m_offset)) string_t;
+		printf("1: '%s'/%d/%lu\n", str->c_str(), str->length(), strlen(str->c_str()));
+
+		{
+			const uint64_t * val = new ((void*)(base() + m_entries[2].m_offset)) uint64_t;
+			printf("2: 0x%016llx\n", *val);
+		}
+	}
+
+	intptr_t base () const
+	{
+		return m_start + m_header.m_count*sizeof(entry_t);
 	}
 
 private:
@@ -136,7 +145,8 @@ private:
 	union
 	{
 		const entry_t * m_entries;
-		const void * m_buffer;
+		intptr_t m_start;
+		const void * m_pointer;
 	};
 	const void * m_alloc_buffer;
 };
@@ -149,7 +159,7 @@ module_t::module_t (const header_t& hdr,
 					const void * alloc_buffer)
 	: m_header(hdr)
 	, m_name(string::cache(name))
-	, m_buffer(buffer)
+	, m_pointer(buffer)
 	, m_alloc_buffer(alloc_buffer)
 {}
 
@@ -169,7 +179,7 @@ const header_t& module_t::get_header () const
 void module_t::debug_dump () const
 {
 	printf("contents of '%s':\n", m_name);
-	hex_dump(m_buffer, m_header.m_size);
+	hex_dump(m_pointer, m_header.m_size);
 
 	printf("entries:\n");
 	for (int ii = 0; ii < 3; ++ii)
@@ -243,8 +253,8 @@ int main (int argc, const char * argv[])
 	//assert(header.m_size > sizeof(header_t));
 
 	module->debug_dump();
-	//module->test1();
-	//module->test2();
+	module->test1();
+	module->test2();
 
 	// verify test entries
 	// int32 * pI = (int32*)buffer;
