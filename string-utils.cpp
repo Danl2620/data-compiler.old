@@ -43,7 +43,8 @@ const char * cache (const char * str)
 	if (len >= remaining)
 		return nullptr;
 
-	strlcpy(nextstr, str, remaining);
+	strncpy(nextstr, str, remaining);
+	nextstr[remaining-1] = 0;
 	s_cache_strings[s_cache_index] = nextstr;
 	s_cache_lengths[s_cache_index] = len;
 	s_cache_index++;

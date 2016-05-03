@@ -10,6 +10,7 @@
 #include <assert.h>
 #include <math.h>
 #include <string.h>
+#include <stdint.h>
 
 //#define STB_DEFINE
 #include "stb.h"

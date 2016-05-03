@@ -1,0 +1,10 @@
+#lang s-exp fracas
+
+(define-export test-int
+	       (instance int32 24))
+
+(define-export test-string
+	       (instance string "this is a test string of utf-8 characters, including a line of Greek: Σὲ γνωρίζω ἀπὸ τὴν κόψη, and some Amharic: ሰማይ አይታረስ ንጉሥ አይከሰስ።. Thanks."))
+
+(define-export test-word64
+	       (instance word64 #xffffffffffffffff))

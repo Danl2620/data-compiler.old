@@ -3,11 +3,12 @@
 INCLUDES :=
 INCLUDES := ../stb
 
-CCFLAGS := $(addprefix -I,$(INCLUDES))
+CCFLAGS := $(addprefix -I,$(INCLUDES)) -std=c++11
 
-RACKETDIR := /Applications/Racket\ v6.2.1/
-RACKETBINDIR := $(RACKETDIR)/bin
-RACKETBIN := $(RACKETBINDIR)/racket
+##RACKETDIR := /Applications/Racket\ v6.0.1/
+##RACKETBINDIR := $(RACKETDIR)/bin
+RACKET := `which racket`  ##$(RACKETBINDIR)/racket
+RACO := `which raco`
 
 OBJS :=
 OBJS += vm.o
@@ -20,7 +21,7 @@ OBJS += string-utils.o
 all: main test.bin
 
 test: all
-	${RACKETBINDIR}/raco test *.rkt
+	${RACO} test *.rkt
 	./main test
 
 clean:
@@ -32,4 +33,4 @@ main: ${OBJS}
 
 
 test.bin: stream.rkt integer.rkt crc32.rkt
-	${RACKETBIN} stream.rkt
+	${RACKET} stream.rkt
