@@ -5,14 +5,12 @@
 #ifndef VM_H
 #define VM_H
 
-// --------------------------------------------------------------------------- //
-struct header_t
+#include <stdint.h>
+
+template <int a, int b, int c, int d>
+struct FourCC
 {
-	uint32 m_magic;
-	int32 m_version;
-	int32 m_size;
-	int32 m_count;
-	uint32 m_crc32;
+    static const uint32_t value = (((((d << 8) | c) << 8) | b) << 8) | a;
 };
 
 // --------------------------------------------------------------------------- //
@@ -41,27 +39,36 @@ namespace dc
 // ------------------------------------------------------------------------------------------------------------------ //
 class module_t
 {
-	struct entry_t
+public:
+	struct header_t
 	{
-		dc::symbol m_symbol;
-		int32_t m_offset;
+		uint32_t m_magic;
+		int32_t m_version;
+		int32_t m_size;
+		int32_t m_count;
+		uint32_t m_crc32;
 	};
 
-public:
 	module_t(const header_t& hdr,
 			 const char * name,
 			 const void * buffer,
 			 const void * alloc_buffer);
-	~module_t();
-	const header_t& get_header() const;
+	virtual ~module_t();
+	const header_t& get_header () const { return m_header; }
 
 	// debug
 	void debug_dump() const;
 	void test1 () const;
 	void test2 () const;
 
-	intptr_t base () const;
 private:
+	struct entry_t
+	{
+		dc::symbol m_symbol;
+		int32_t m_offset;
+	};
+
+	intptr_t base () const;
 	const char * m_name;
 	header_t m_header;
 	union
@@ -72,5 +79,9 @@ private:
 	};
 	const void * m_alloc_buffer;
 };
+
+extern uint32_t get_magic_code();
+extern module_t * load_module(const char * module_name);
+extern void free_module(module_t * module);
 
 #endif // VM_H

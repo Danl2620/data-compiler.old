@@ -75,6 +75,8 @@
                                         )))))
              #:size-of (lambda (inst) 8)))
 
+;; (define (class
+
 ;; (define (array type)
 ;;   )
 

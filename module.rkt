@@ -59,37 +59,6 @@
 
                            ;; write items
                            (bytes-append* bss))
-                          ))
-
-        ;; (payload-bytes (bytes-append
-        ;;                 ;; write name/offsets, then items
-        ;;                 (let* ((bss (map (compose encode cdr) payload))
-        ;;                        (lens (map bytes-length bss))
-        ;;                        (offset 0)
-        ;;                        (offsets (map (lambda (off)
-        ;;                                        (let ((v (+ offset off)))
-        ;;                                          (set! offset (+ offset off))
-        ;;                                          v))
-        ;;                                      lens)))
-
-        ;;                   (bytes-append
-        ;;                    ;; write name/offset pairs
-        ;;                    (bytes-append*
-        ;;                     (map
-        ;;                      (lambda (pair off)
-        ;;                        (let ((name (car pair))
-        ;;                              (inst (cdr pair)))
-        ;;                          (bytes-append
-        ;;                           (word32->bytes (crc32/string (symbol->string name)))
-        ;;                           (word32->bytes off)
-        ;;                           )))
-        ;;                      payload
-        ;;                      offsets))
-
-        ;;                    ;; write items
-        ;;                    (bytes-append* bss))
-        ;;                   )))
-		)
-	(print lens)
+                          )))
     (bytes-append header-bytes payload-bytes)
     ))

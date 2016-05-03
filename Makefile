@@ -12,6 +12,7 @@ RACO := raco
 
 OBJS :=
 OBJS += vm.o
+OBJS += main.o
 OBJS += string-utils.o
 
 %.o : %.cpp

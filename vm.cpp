@@ -10,7 +10,6 @@
 #include <assert.h>
 #include <math.h>
 #include <string.h>
-#include <stdint.h>
 
 //#define STB_DEFINE
 #include "stb.h"
@@ -18,11 +17,6 @@
 #include "vm.h"
 #include "string-utils.h"
 
-template <int a, int b, int c, int d>
-struct FourCC
-{
-    static const unsigned int value = (((((d << 8) | c) << 8) | b) << 8) | a;
-};
 
 const unsigned int kMagicDC(FourCC<'F', 'r', 'a', 'c'>::value);
 
@@ -70,7 +64,7 @@ void hex_dump (const void * buffer, int data_size)
 // 	}
 
 // ------------------------------------------------------------------------------------------------------------------ //
-module_t::module_t (const header_t& hdr,
+module_t::module_t (const module_t::header_t& hdr,
 					const char * name,
 					const void * buffer,
 					const void * alloc_buffer)
@@ -84,12 +78,6 @@ module_t::module_t (const header_t& hdr,
 module_t::~module_t ()
 {
 	free((void*)m_alloc_buffer);
-}
-
-// ------------------------------------------------------------------------------------------------------------------ //
-const header_t& module_t::get_header () const
-{
-	return m_header;
 }
 
 // ------------------------------------------------------------------------------------------------------------------ //
@@ -134,6 +122,11 @@ void module_t::debug_dump () const
 	}
 }
 
+// ------------------------------------------------------------------------------------------------------------------ //
+uint32_t get_magic_code ()
+{
+	return kMagicDC;
+}
 
 // ------------------------------------------------------------------------------------------------------------------ //
 module_t * load_module (const char * module_name)
@@ -147,8 +140,8 @@ module_t * load_module (const char * module_name)
 		return nullptr;
 	}
 
-	header_t header;
-	if (1 != fread(&header, sizeof(header_t), 1, fp))
+	module_t::header_t header;
+	if (1 != fread(&header, sizeof(module_t::header_t), 1, fp))
 	{
 		printf("Cannot read file (%d)\n", errno);
 		fclose(fp);
@@ -174,41 +167,4 @@ module_t * load_module (const char * module_name)
 void free_module (module_t * module)
 {
 	delete module;
-}
-
-// ------------------------------------------------------------------------------------------------------------------ //
-int main (int argc, const char * argv[])
-{
-	if (argc < 2)
-		return -1;
-
-	const char * module_name = argv[1];
-	printf("loading module '%s',", module_name);
-	module_t * module = load_module(module_name);
-
-	const header_t& header = module->get_header();
-	printf(" type: '%c%c%c%c', version: %d, size: %d, count: %d crc32: 0x%08x\n\n",
-		   header.m_magic&255, (header.m_magic>>8)&255, (header.m_magic>>16)&255, (header.m_magic>>24)&255,
-		   header.m_version,
-		   header.m_size,
-		   header.m_count,
-		   header.m_crc32);
-
-	assert(header.m_magic == kMagicDC);
-	assert(header.m_version == 1);
-	//assert(header.m_size > sizeof(header_t));
-
-	module->debug_dump();
-	module->test1();
-	module->test2();
-
-	// verify test entries
-	// int32 * pI = (int32*)buffer;
-	// assert(*pI == 24);
-
-	// stb_uint64 * pU64 = (stb_uint64*)(buffer + 4);
-	// assert(*pU64 == 0xffffffffffffffff);
-
-	free_module(module);
-	return 0;
 }
