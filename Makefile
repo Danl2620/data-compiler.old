@@ -7,8 +7,8 @@ CCFLAGS := $(addprefix -I,$(INCLUDES)) -std=c++11
 
 ##RACKETDIR := /Applications/Racket\ v6.0.1/
 ##RACKETBINDIR := $(RACKETDIR)/bin
-RACKET := `which racket`  ##$(RACKETBINDIR)/racket
-RACO := `which raco`
+RACKET := racket  ##$(RACKETBINDIR)/racket
+RACO := raco
 
 OBJS :=
 OBJS += vm.o
