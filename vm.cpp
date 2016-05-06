@@ -18,7 +18,7 @@
 #include "string-utils.h"
 
 
-const unsigned int kMagicDC(FourCC<'F', 'r', 'a', 'c'>::value);
+const unsigned int kMagicFracas(FourCC<'F', 'r', 'a', 'c'>::value);
 
 // ------------------------------------------------------------------------------------------------------------------ //
 const void * align_pointer (const void * ptr, int align)
@@ -90,15 +90,15 @@ void module_t::test1 () const
 void module_t::test2 () const
 {
 	{
-		const int32_t * val = new ((void*)(base() + m_entries[0].m_offset)) int32_t;
+		const fracas::int32 * val = new ((void*)(base() + m_entries[0].m_offset)) fracas::int32;
 		printf("0: %d\n", *val);
 	}
 
-	const string_t * str = new ((void*)(base() + m_entries[1].m_offset)) string_t;
+	const fracas::string * str = new ((void*)(base() + m_entries[1].m_offset)) fracas::string;
 	printf("1: '%s'/%d/%lu\n", str->c_str(), str->length(), strlen(str->c_str()));
 
 	{
-		const uint64_t * val = new ((void*)(base() + m_entries[2].m_offset)) uint64_t;
+		const fracas::word64 * val = new ((void*)(base() + m_entries[2].m_offset)) fracas::word64;
 		printf("2: 0x%016llx\n", *val);
 	}
 }
@@ -125,7 +125,7 @@ void module_t::debug_dump () const
 // ------------------------------------------------------------------------------------------------------------------ //
 uint32_t get_magic_code ()
 {
-	return kMagicDC;
+	return kMagicFracas;
 }
 
 // ------------------------------------------------------------------------------------------------------------------ //

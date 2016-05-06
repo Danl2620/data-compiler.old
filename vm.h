@@ -26,7 +26,7 @@ private:
 };
 
 // --------------------------------------------------------------------------- //
-namespace dc
+namespace fracas
 {
 	typedef int32_t int32;
 	typedef int64_t int64;
@@ -64,7 +64,7 @@ public:
 private:
 	struct entry_t
 	{
-		dc::symbol m_symbol;
+		fracas::symbol m_symbol;
 		int32_t m_offset;
 	};
 

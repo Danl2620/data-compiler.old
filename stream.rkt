@@ -12,6 +12,8 @@
  "module.rkt"
  ]
 
+(define *test-string* "this is a string of utf-8 characters, including a line of Greek: Σὲ γνωρίζω ἀπὸ τὴν κόψη, and some Amharic: ሰማይ አይታረስ ንጉሥ አይከሰስ።. Thanks.")
+
 ;; (define test-struct-type
 ;;   ;; struct consisting of an string and an integer
 ;;   ;;
@@ -29,7 +31,7 @@
   (fracas-module
 	  (vector 'test-int 'test-string 'test-word64)
 	  (vector (instance int32 24)
-			  (instance string "this is a string of utf-8 characters, including a line of Greek: Σὲ γνωρίζω ἀπὸ τὴν κόψη, and some Amharic: ሰማይ አይታረስ ንጉሥ አይከሰስ።. Thanks.")
+			  (instance string *test-string*)
 			  (instance word64 #xffffffffffffffff))))
 
 (define (write-bin mod path)
