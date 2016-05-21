@@ -29,10 +29,12 @@
 
 (define test-module
   (fracas-module
-	  (vector 'test-int 'test-string 'test-word64)
+	  (vector 'test-int 'test-string 'test-word64 'test-pint32)
 	  (vector (instance int32 24)
 			  (instance string *test-string*)
-			  (instance word64 #xffffffffffffffff))))
+			  (instance word64 #xffffffffffffffff)
+			  (instance (pointer int32) 48)
+			  )))
 
 (define (write-bin mod path)
   (call-with-atomic-output-file

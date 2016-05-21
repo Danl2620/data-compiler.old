@@ -17,6 +17,8 @@ int main (int argc, const char * argv[])
 	const char * module_name = argv[1];
 	printf("loading module '%s',", module_name);
 	module_t * module = load_module(module_name);
+	if (!module)
+		return -1;
 
 	const module_t::header_t& header = module->get_header();
 	printf(" type: '%c%c%c%c', version: %d, size: %d, count: %d crc32: 0x%08x\n\n",
