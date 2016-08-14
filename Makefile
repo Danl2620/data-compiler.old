@@ -21,10 +21,12 @@ FRACAS_TARGETS := $(subst src/,bin/,$(FRACAS_SRCS:.frc=.bin))
 
 bin/%.o : rt/%.cpp
 	@echo $@
+	@mkdir -p $(dir $@)
 	@clang++ ${CCFLAGS} -c $< -o $@
 
 bin/%.bin : src/%.frc
 	@echo $@
+	@mkdir -p $(dir $@)
 	@$(RACO) make --vv lib/fracas/make-bin.rkt
 ##	@$(RACKET) -l fracas/make-bin -- $^
 
