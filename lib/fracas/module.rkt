@@ -17,6 +17,9 @@
   (names
    values))
 
+;; (define (register-export! id)
+;;   (add-export! *current-module* id))
+
 (define (form-offsets lens)
   (reverse (foldl (lambda (el lst) (cons (+ el (car lst)) lst)) '(0) lens)))
 

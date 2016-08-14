@@ -1,4 +1,4 @@
-#lang s-exp fracas
+#lang fracas
 
 (define-export test-int
 	       (instance int32 24))

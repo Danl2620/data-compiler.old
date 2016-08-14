@@ -5,32 +5,42 @@ INCLUDES := ../stb
 
 CCFLAGS := $(addprefix -I,$(INCLUDES)) -std=c++11
 
+COMPILED_DIR := "$(CURDIR)/bin/zos/@(version)"
+
 ##RACKETDIR := /Applications/Racket\ v6.0.1/
 ##RACKETBINDIR := $(RACKETDIR)/bin
-RACKET := racket  ##$(RACKETBINDIR)/racket
-RACO := raco
+RACKET := racket -R $(COMPILED_DIR)  ##$(RACKETBINDIR)/racket
+RACO := $(RACKET) -l- raco
 
-OBJS :=
-OBJS += vm.o
-OBJS += main.o
-OBJS += string-utils.o
+CPP_SRCS := $(wildcard rt/*.cpp)
+CPP_OBJS := $(subst rt/,bin/,$(CPP_SRCS:.cpp=.o))
 
-%.o : %.cpp
+FRACAS_SRCS := $(wildcard src/*.frc)
+FRACAS_TARGETS := $(subst src/,bin/,$(FRACAS_SRCS:.frc=.bin))
+
+
+bin/%.o : rt/%.cpp
 	@echo $@
-	clang++ ${CCFLAGS} -c $<
+	@clang++ ${CCFLAGS} -c $< -o $@
 
-all: main test.bin
+bin/%.bin : src/%.frc
+	@echo $@
+	@$(RACO) make --vv lib/fracas/make-bin.rkt
+##	@$(RACKET) -l fracas/make-bin -- $^
+
+all: bin/main $(FRACAS_TARGETS)
 
 test: all
 	${RACO} test *.rkt
-	./main test
+	bin/main test
 
 clean:
-	rm -f ${OBJS} main
+	rm -f $(CPP_OBJS) bin/main
+	rm -rf $(COMPILED_DIR)
 
-main: ${OBJS}
+bin/main: $(CPP_OBJS)
 	@echo $@
-	clang++ -o $@ ${OBJS}
+	@clang++ -o $@ $^
 
 
 test.bin: stream.rkt integer.rkt crc32.rkt

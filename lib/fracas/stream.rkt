@@ -36,6 +36,7 @@
 			  (instance (pointer int32) 48)
 			  )))
 
+(provide write-bin)
 (define (write-bin mod path)
   (call-with-atomic-output-file
    path
@@ -43,6 +44,6 @@
      (display (make-module-bytes mod) port)
      )))
 
-(module* main #f
-  (write-bin test-module (build-path "test.bin"))
-  )
+;; (module* main #f
+;;   (write-bin test-module (build-path "test.bin"))
+;;   )
