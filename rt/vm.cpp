@@ -4,6 +4,8 @@
 
 #include <new>
 #include <memory>
+#include <cctype>
+#include <cstdlib>
 
 #include <stdio.h>
 #include <errno.h>
