@@ -35,7 +35,7 @@ env:
 # You may want to test against certain versions of Racket, without
 # having them count against the overall success/failure.
 os:
- - osx
+## - osx  ## the travis-racket distro doesn't support osx
  - linux
 
 compiler:
