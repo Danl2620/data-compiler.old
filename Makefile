@@ -9,7 +9,8 @@ COMPILED_DIR := "$(CURDIR)/bin/zos/@(version)"
 
 ##RACKETDIR := /Applications/Racket\ v6.0.1/
 ##RACKETBINDIR := $(RACKETDIR)/bin
-RACKET := racket -R $(COMPILED_DIR)  ##$(RACKETBINDIR)/racket
+RACKET := racket -R $(COMPILED_DIR)
+RACKET := racket -R $(COMPILED_DIR) -S ./lib
 RACO := $(RACKET) -l- raco
 
 CPP_SRCS := $(wildcard rt/*.cpp)
@@ -27,7 +28,8 @@ bin/%.o : rt/%.cpp
 bin/%.bin : src/%.frc
 	@echo $@
 	@mkdir -p $(dir $@)
-	@$(RACO) make --vv lib/fracas/make-bin.rkt
+##	@$(RACO) make --vv lib/fracas/make-bin.rkt
+	@$(RACO) make lib/fracas/make-bin.rkt
 ##	@$(RACKET) -l fracas/make-bin -- $^
 
 all: bin/main $(FRACAS_TARGETS)
@@ -36,7 +38,14 @@ test: all
 	${RACO} test *.rkt
 	bin/main test
 
+setup:
+	$(RACO) setup -v -j 12 --no-docs --fail-fast fracas
+
+# pkg-install:
+# 	$(RACO) pkg install -i -j 12 --fail-fast lib/fracas
+
 clean:
+	@$(RACO) setup -c fracas
 	rm -f $(CPP_OBJS) bin/main
 	rm -rf $(COMPILED_DIR)
 
@@ -47,3 +56,5 @@ bin/main: $(CPP_OBJS)
 
 test.bin: stream.rkt integer.rkt crc32.rkt
 	${RACKET} stream.rkt
+
+.PHONY: all test setup clean pkg-install

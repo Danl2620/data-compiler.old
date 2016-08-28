@@ -32,13 +32,13 @@
 
 (define (generate-header->bytes mod)
   (let ((count (vector-length (fracas-module-values mod))))
-  [bytes-append
-   #"Frac"
-   (int32->bytes 1)
-   (int32->bytes (+ (* 8 count) (for/sum ((inst (vector->list (fracas-module-values mod)))) (size-of inst))))
-   (int32->bytes count)
-   (word32->bytes #xcafebabe)
-   ]))
+	[bytes-append
+	 #"Frac"
+	 (int32->bytes 1)
+	 (int32->bytes (+ (* 8 count) (for/sum ((inst (vector->list (fracas-module-values mod)))) (size-of inst))))
+	 (int32->bytes count)
+	 (word32->bytes #xcafebabe)
+	 ]))
 
 (define (make-module-bytes mod)
   (let* ((header-bytes (generate-header->bytes mod))
