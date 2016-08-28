@@ -34,20 +34,19 @@ env:
 
 # You may want to test against certain versions of Racket, without
 # having them count against the overall success/failure.
-matrix:
-  include:
-  - os: osx
-    compiler: clang
-    env: PATH=./racket/bin:$PATH
-  - os: linux
-    compiler: clang
-    env: PATH=./racket/bin:$PATH
-  allow_failures:
-    env: RACKET_VERSION=HEAD
-    # Fast finish: Overall build result is determined as soon as any of
-    # its rows have failed, or, all of its rows that aren't allowed to
-    # fail have succeeded.
-    fast_finish: true
+os:
+ - osx
+ - linux
+
+compiler:
+ - clang
+
+allow_failures:
+  env: RACKET_VERSION=HEAD
+  # Fast finish: Overall build result is determined as soon as any of
+  # its rows have failed, or, all of its rows that aren't allowed to
+  # fail have succeeded.
+  fast_finish: true
 
 
 before_install:
