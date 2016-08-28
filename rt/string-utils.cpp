@@ -4,10 +4,10 @@
 
 #include <memory>
 #include <assert.h>
+#include <stdint.h>
+#include <cstring>
 
-//#include "stb.h"
 #include "string-utils.h"
-
 
 // ------------------------------------------------------------------------------------------------------------------ //
 //  a simple string cache
