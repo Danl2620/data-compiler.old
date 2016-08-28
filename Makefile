@@ -29,7 +29,7 @@ bin/%.bin : src/%.frc
 	@echo $@
 	@mkdir -p $(dir $@)
 ##	@$(RACO) make --vv lib/fracas/make-bin.rkt
-	@$(RACO) make lib/fracas/make-bin.rkt
+	@$(RACO) make -v lib/fracas/make-bin.rkt
 ##	@$(RACKET) -l fracas/make-bin -- $^
 
 all: bin/main $(FRACAS_TARGETS)
