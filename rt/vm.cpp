@@ -12,7 +12,7 @@
 #include <string.h>
 
 //#define STB_DEFINE
-#include "stb.h"
+//#include "stb.h"
 
 #include "vm.h"
 #include "string-utils.h"
@@ -31,7 +31,7 @@ void hex_dump (const void * buffer, int data_size)
 {
 	int lines = data_size/8 + 1;
 
-	uint8 * ptr = (uint8*)buffer;
+	uint8_t * ptr = (uint8_t*)buffer;
 	for (int ii = 0; ii < lines; ++ii)
 	{
 		printf("%016lx (%08x) : %02x %02x %02x %02x %02x %02x %02x %02x  ",
@@ -152,7 +152,7 @@ module_t * load_module (const char * module_name)
 	size_t data_size = header.m_size;
 
 	void * ptr = malloc(data_size + align);
-	uint8 * buffer = (uint8*)align_pointer(ptr, align);
+	uint8_t * buffer = (uint8_t*)align_pointer(ptr, align);
 	if (1 != fread(buffer, data_size, 1, fp))
 	{
 		printf("Error reading data (%d)\n", errno);
