@@ -101,7 +101,7 @@ void module_t::test2 () const
 
 	{
 		const fracas::word64 * val = new ((void*)(base() + m_entries[2].m_offset)) fracas::word64;
-		printf("2: 0x%016llx\n", *val);
+		printf("2: 0x%016lx\n", *val);
 	}
 }
 
