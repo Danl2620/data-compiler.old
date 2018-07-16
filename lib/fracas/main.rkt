@@ -2,7 +2,7 @@
 
 (module+ test
   (require rackunit))
-x
+
 ;; Notice
 ;; To install (from within the package directory):
 ;;   $ raco pkg install

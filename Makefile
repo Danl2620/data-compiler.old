@@ -1,4 +1,5 @@
 
+RK := "/Applications/Racket v6.8/bin/racket"
 
 INCLUDES :=
 INCLUDES := ../stb
@@ -9,8 +10,9 @@ COMPILED_DIR := "$(CURDIR)/bin/zos/@(version)"
 
 ##RACKETDIR := /Applications/Racket\ v6.0.1/
 ##RACKETBINDIR := $(RACKETDIR)/bin
-RACKET := racket -R $(COMPILED_DIR)
-RACKET := racket -R $(COMPILED_DIR) -S ./lib
+##RACKET := racket -R $(COMPILED_DIR)
+##RACKET := racket -R $(COMPILED_DIR) -S lib
+RACKET := $(RK) -S lib
 RACO := $(RACKET) -l- raco
 
 CPP_SRCS := $(wildcard rt/*.cpp)
@@ -30,13 +32,13 @@ bin/%.bin : src/%.frc
 	@mkdir -p $(dir $@)
 ##	@$(RACO) make --vv lib/fracas/make-bin.rkt
 	@$(RACO) make -v lib/fracas/make-bin.rkt
-##	@$(RACKET) -l fracas/make-bin -- $^
+	@$(RACKET) -l fracas/make-bin -- $^
 
-all: bin/main $(FRACAS_TARGETS)
+all: bin/main ## $(FRACAS_TARGETS)
 
 test: all
-	${RACO} test *.rkt
-	bin/main test
+	${RACO} test -c fracas
+##	bin/main test
 
 setup:
 	$(RACO) setup -v -j 12 --no-docs --fail-fast fracas
@@ -54,7 +56,7 @@ bin/main: $(CPP_OBJS)
 	@clang++ -o $@ $^
 
 
-test.bin: stream.rkt integer.rkt crc32.rkt
-	${RACKET} stream.rkt
+test.bin: 
+	${RACKET} ${FRACAS_SRCS} 
 
 .PHONY: all test setup clean pkg-install

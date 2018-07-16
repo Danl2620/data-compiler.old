@@ -1,7 +1,7 @@
 #lang racket/base
 (define (make-bin/path ip)
   (local-require racket/path
-                 fracas/stream
+                 "stream.rkt"
                  )
   (define p (path->complete-path ip))
   (write-bin (path->string (file-name-from-path (path-replace-suffix p #""))) p))
